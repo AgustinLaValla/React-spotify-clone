@@ -7,7 +7,6 @@ export const Home = ({ spotify }) => {
     const [{ recentlyPlayerTracks, featuredPlaylists, newRealises, recommendations }, dispatch] = useDataLayerValue();
     return (
         <div className="home">
-            <Header spotify={spotify} />
             <div className="home__itemsContainer">
                 {recentlyPlayerTracks &&
                     <ItemsList

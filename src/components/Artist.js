@@ -1,7 +1,6 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDataLayerValue } from './DataLayer'
-import { Header } from './Header';
-import { Button, makeStyles, capitalize } from '@material-ui/core';
+import { Button, makeStyles } from '@material-ui/core';
 import PlayCircleFilledIcon from '@material-ui/icons/PlayCircleFilled';
 import { SongRow } from './SongRow';
 import PlayCircleOutlineIcon from '@material-ui/icons/PlayCircleOutline';
@@ -22,9 +21,28 @@ export const Artist = ({ spotify }) => {
 
     const classes = useStyles();
 
-    const [{ artistDetails, artistTopTracks, artistAlbums }, dispatch] = useDataLayerValue();
+    const [isFollowingArtist, setIsFollowingArtist] = useState(false);
 
-    const captalize = (word) => word[0].toUpperCase() + word.slice(1);
+    const [{ artistDetails, artistTopTracks, artistAlbums, deviceId }, dispatch] = useDataLayerValue();
+
+    const isUserFollowingArtist = () => {
+        if (artistDetails) {
+            spotify.isFollowingArtists([artistDetails.id]).then(resp => {
+                setIsFollowingArtist(...resp);
+            })
+        }
+    }
+
+    const handleFollowButtonClick = async () => {
+        if (isFollowingArtist) {
+            await spotify.unfollowArtists([artistDetails.id]);
+        } else {
+            await spotify.followArtists([artistDetails.id]);
+        }
+        await isUserFollowingArtist();
+    }
+
+    const capitalize = (word) => word[0].toUpperCase() + word.slice(1);
 
     const onMouseOverHandler = (idx) => {
         document.getElementById(`album-playIcon${idx}`).style.opacity = 1;
@@ -40,10 +58,15 @@ export const Artist = ({ spotify }) => {
         dispatch({ type: 'SET_ALBUM_DETAILS', albumDetails: resp });
     }
 
+    const onPlayCircleClick = async () => {
+        const uris = artistTopTracks.map(track => track.uri);
+        await spotify.play({ uris: uris, device_id: deviceId, offset: { 'uri': uris[0] } })
+    }
+
+    useEffect(() => isUserFollowingArtist(), [artistDetails])
 
     return (
         <div className="artist">
-            <Header spotify={spotify} />
             {artistDetails &&
                 <div className="artist__info">
                     <img src={artistDetails.images[0].url} alt={artistDetails.name} />
@@ -56,15 +79,22 @@ export const Artist = ({ spotify }) => {
             }
 
             <div className="artist__follow">
-                <PlayCircleFilledIcon className="artist__playIcon" />
-                <Button variant="outlined" className="artist__followBtn" className={classes.button}>Follow</Button>
+                <PlayCircleFilledIcon onClick={onPlayCircleClick} className="artist__playIcon" />
+                <Button
+                    onClick={handleFollowButtonClick}
+                    variant="outlined"
+                    className="artist__followBtn"
+                    className={classes.button}
+                >
+                    {isFollowingArtist ? 'Following' : 'Follow'}
+                </Button>
             </div>
 
             {artistTopTracks &&
                 <div className="artist__songs">
                     <h2>Popular</h2>
                     {artistTopTracks.map(track => (
-                        <SongRow track={track} />
+                        <SongRow key={track.id} track={track} spotify={spotify} />
                     ))}
                 </div>
             }

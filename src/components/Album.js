@@ -1,6 +1,5 @@
 import React from 'react'
 import { useDataLayerValue } from './DataLayer';
-import { Header } from './Header';
 import * as moment from 'moment/moment';
 import PlayCircleFilledIcon from '@material-ui/icons/PlayCircleFilled';
 import FavoriteIcon from '@material-ui/icons/Favorite';
@@ -9,7 +8,7 @@ import { SongRow } from './SongRow';
 
 export const Album = ({ spotify }) => {
 
-    const [{ albumDetails }, dispatch] = useDataLayerValue();
+    const [{ albumDetails, deviceId }, dispatch] = useDataLayerValue();
 
     const capitalize = (word) => word[0].toUpperCase() + word.slice(1);
 
@@ -27,9 +26,16 @@ export const Album = ({ spotify }) => {
         }).join(' ');
     }
 
+    const onPlayCircleClick = async () => {
+        await spotify.play({
+            context_uri: albumDetails.uri,
+            device_id: deviceId,
+            offset: { 'position': Math.round(Math.random() * albumDetails.tracks.items.length - 1) }
+        })
+    }
+
     return (
         <div className="album">
-            <Header spotify={spotify} />
             {albumDetails &&
                 <div className="album__info">
                     <img src={albumDetails.images[0].url} alt={albumDetails.name} />
@@ -47,12 +53,18 @@ export const Album = ({ spotify }) => {
             {albumDetails &&
                 <div className="player__songs">
                     <div className="player__icons">
-                        <PlayCircleFilledIcon className="player__shuffle" />
+                        <PlayCircleFilledIcon onClick={onPlayCircleClick} className="player__shuffle" />
                         <FavoriteIcon fontSize="large" />
                         <MoreHorizIcon />
                     </div>
                     {albumDetails?.tracks.items.map(item => (
-                        <SongRow track={item} albumImage={albumDetails.images[0].url} albumName={albumDetails.name}/>
+                        <SongRow
+                            key={item.id}
+                            track={item}
+                            albumImage={albumDetails.images[0].url}
+                            albumName={albumDetails.name}
+                            spotify={spotify}
+                        />
                     ))}
                 </div>
 

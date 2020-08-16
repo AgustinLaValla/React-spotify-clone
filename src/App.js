@@ -21,8 +21,7 @@ function App() {
       dispatch({ type: 'SET_TOKEN', token: _token });
       spotify.setAccessToken(_token);
       spotify.getMe().then(user => dispatch({ type: 'SET_USER', user: user }));
-      dispatch({ type: 'SET_CURRENT_SCREEN', currentScreen: 'Player' })
-      spotify.getUserPlaylists().then(playLists => dispatch({ type: 'SET_USER_PLAYLISTS', playLists: playLists }));
+      dispatch({ type: 'SET_CURRENT_SCREEN', currentScreen: 'Player' });
       spotify.getPlaylist('37i9dQZEVXcGCEYfa5aelK').then(result => dispatch({ type: 'SET_CURRENT_PLAYLIST', playlist: result }));
     }
   }, []);

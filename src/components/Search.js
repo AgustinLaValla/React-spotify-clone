@@ -9,7 +9,6 @@ export const Search = ({ spotify }) => {
 
     return (
         <div className="search">
-            <Header spotify={spotify} />
             <div className="search__resultsContainer">
                 {artistsList && <ItemsList itemsList={artistsList} title="Artists" spotify={spotify}  itemType="Artist"/>}
                 {albumsList && <ItemsList itemsList={albumsList} title="Albums" spotify={spotify}  itemType="Album"/>}

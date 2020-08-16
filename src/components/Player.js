@@ -1,25 +1,48 @@
-import React, { useEffect } from 'react';
-import { Header } from './Header';
+import React, { useEffect, useState } from 'react';
 import { useDataLayerValue } from './DataLayer';
 import PlayCircleFilledIcon from '@material-ui/icons/PlayCircleFilled';
 import FavoriteIcon from '@material-ui/icons/Favorite';
+import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
 import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
 import { SongRow } from './SongRow';
 
 export const Player = ({ spotify }) => {
 
-    const [{ currentPlayList }, dispatch] = useDataLayerValue();
+    const [{ currentPlayList, deviceId, user }, dispatch] = useDataLayerValue();
+    const [isFollowingPlaylist, setIsFollowingPlaylist] = useState(false);
 
-    // useEffect(() => {
-    //     if (currentPlayList && currentPlayList.id) {
-    //         console.log(currentPlayList.id);
-    //         spotify.areFollowingPlaylist(currentPlayList.id).then(console.log).catch(console.log)
-    //     }
-    // }, [currentPlayList]);
+    const isUserFollowingPlaylist = () => {
+        if (currentPlayList) {
+            spotify.areFollowingPlaylist(currentPlayList.id, [user.id]).then(resp => {
+                console.log(resp);
+                setIsFollowingPlaylist(...resp);
+            });
+        }
+    }
+
+    const handleFollowingIconClick = async () => {
+        if (isFollowingPlaylist) {
+            await spotify.unfollowPlaylist(currentPlayList.id);
+        } else {
+            await spotify.followPlaylist(currentPlayList.id);
+        }
+        await isUserFollowingPlaylist();
+        const playLists = await spotify.getUserPlaylists();
+        dispatch({ type: 'SET_USER_PLAYLISTS', playLists: playLists })
+    }
+
+    const onPlayCircleClick = async () => {
+        await spotify.play({
+            context_uri: currentPlayList.uri,
+            device_id: deviceId,
+            offset: { 'position': Math.round(Math.random() * currentPlayList.tracks.items.length - 1) }
+        })
+    }
+
+    useEffect(() => isUserFollowingPlaylist(), [currentPlayList]);
 
     return (
         <div className="player">
-            <Header spotify={spotify} />
             <div className="player__info">
                 <img src={currentPlayList?.images[0].url} alt="" />
                 <div className="player__infoText">
@@ -31,12 +54,23 @@ export const Player = ({ spotify }) => {
 
             <div className="player__songs">
                 <div className="player__icons">
-                    <PlayCircleFilledIcon className="player__shuffle" />
-                    <FavoriteIcon fontSize="large" />
+                    <PlayCircleFilledIcon onClick={onPlayCircleClick} className="player__shuffle" />
+                    {isFollowingPlaylist
+                        ? <FavoriteIcon
+                            onClick={handleFollowingIconClick}
+                            fontSize="large"
+                            className="player__followingIcon"
+                        />
+                        : <FavoriteBorderIcon
+                            onClick={handleFollowingIconClick}
+                            fontSize="large"
+                            className="player__noFollowingIcon"
+                        />
+                    }
                     <MoreHorizIcon />
                 </div>
                 {currentPlayList?.tracks.items.map(item => (
-                    <SongRow track={item.track} />
+                    <SongRow key={item.track.id} track={item.track} spotify={spotify} />
                 ))}
             </div>
 

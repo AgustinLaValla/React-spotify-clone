@@ -4,11 +4,20 @@ import HomeSharpIcon from '@material-ui/icons/HomeSharp';
 import SearchSharpIcon from '@material-ui/icons/SearchSharp';
 import LibraryMusicSharpIcon from '@material-ui/icons/LibraryMusicSharp';
 import { useDataLayerValue } from './DataLayer';
+import { useEffect } from 'react';
 
 export const Sidebar = ({ spotify }) => {
 
-    const [{ playLists }, dispatch] = useDataLayerValue();
+    const [{ user, playLists }, dispatch] = useDataLayerValue();
 
+    useEffect(() => {
+        if (user) {
+            spotify.getUserPlaylists(user.id).then(playLists =>
+                dispatch({ type: 'SET_USER_PLAYLISTS', playLists: playLists })
+            );
+
+        }
+    }, [user])
 
     return (
         <div className="sidebar">

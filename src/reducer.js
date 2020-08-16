@@ -15,10 +15,11 @@ export const initialState = {
     albumDetails: null,
     recentlyPlayerTracks: null,
     featuredPlayLists: null,
+    player: null,
+    currentTrackId:null
 }
 
 export const reducer = (state, action) => {
-    console.log(action);
     switch (action.type) {
         case 'SET_USER':
             return {
@@ -113,6 +114,24 @@ export const reducer = (state, action) => {
             return {
                 ...state,
                 newRealises: { ...action.newRealises }
+            }
+
+        case 'SET_PLAYER_HANDLER':
+            return {
+                ...state,
+                player: action.player 
+            }
+
+        case 'SET_DEVICE_ID':
+            return {
+                ...state,
+                deviceId: action.deviceId
+            }
+
+        case 'SET_CURRENT_TRACK_ID':
+            return {
+                ...state,
+                currentTrackId: action.currentTrackId
             }
 
         default:

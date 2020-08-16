@@ -2,13 +2,17 @@ import React from 'react';
 import SearchIcon from '@material-ui/icons/Search';
 import { Avatar } from '@material-ui/core';
 import { useDataLayerValue } from './DataLayer';
+import { useState } from 'react';
 
 export const Header = ({ spotify }) => {
 
     const [{ user, currentScreen }, dispatch] = useDataLayerValue();
+    const [inputValue, setInputValue] = useState('');
 
-    const handleKeyDown = async (ev) => {
-        const query = ev.target.value;
+    const handleChange = async ({target:{value}}) => {
+
+        setInputValue(value);
+        const query = value;
         const result = await spotify.search(`${query}`, ['artist', 'album', 'playlist']);
         dispatch({ type: 'SET_ARTISTS_LIST', artistsList: result.artists });
         dispatch({ type: 'SET_ALBUMS_LIST', albumsList: result.albums });
@@ -22,7 +26,13 @@ export const Header = ({ spotify }) => {
         <div className="header">
             <div className="header__left">
                 <SearchIcon />
-                <input type="text" placeholder="Search for Artists, Songs, or Albums" onKeyDown={handleKeyDown} />
+                <input
+                    type="text"
+                    placeholder="Search for Artists, Songs, or Albums"
+                    onChange={handleChange}
+                    value={inputValue}
+                    onKeyPress={({key}) =>  key ==='Enter' ? setInputValue('') : null}
+                />
             </div>
             <div className="header__right">
                 <Avatar src={user?.images[0]?.url} alt={user?.display_name} />

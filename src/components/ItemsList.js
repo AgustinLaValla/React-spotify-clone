@@ -4,7 +4,7 @@ import { useDataLayerValue } from './DataLayer';
 
 export const ItemsList = ({ title, itemsList, spotify, itemType }) => {
 
-    const [state, dispatch] = useDataLayerValue();
+    const [{ deviceId }, dispatch] = useDataLayerValue();
 
     const toLowerCase = (text) => text[0].toUpperCase() + text.slice(1);
 
@@ -36,6 +36,18 @@ export const ItemsList = ({ title, itemsList, spotify, itemType }) => {
         }
     }
 
+    const handleOnPlayCircleClick = async (item) => {
+        dispatch({ type: 'SET_CURRENT_SCREEN', currentScreen: 'Search' });
+        if (item.type === 'artist') {
+            const topTracks = await spotify.getArtistTopTracks(item.id, 'US');
+            const uris = topTracks.tracks.slice(0, 5).map(track => track.uri);
+            return spotify.play({ 'uris': uris, device_id: deviceId, offset: { "uri": uris[0] } });
+        }
+
+        if(item.type === 'album' || item.type === 'playlist') {
+            return await spotify.play({device_id: deviceId, context_uri: item.uri, offset: {position:0}});
+        }
+    }
 
     return (
         <div className="search__results">
@@ -51,7 +63,11 @@ export const ItemsList = ({ title, itemsList, spotify, itemType }) => {
                         <img src={getImageUrl(item)} alt={item && item.name ? item.name : ''} />
                         <h1>{item?.name?.length >= 20 ? item.name.slice(0, 20) + '...' : item.name}</h1>
                         <p>{toLowerCase(item?.type)}</p>
-                        <PlayCircleFilledIcon id={`${title}-icon${idx}`} className="search__cardPlayIcon" />
+                        <PlayCircleFilledIcon
+                            onClick={() => handleOnPlayCircleClick(item)}
+                            id={`${title}-icon${idx}`}
+                            className="search__cardPlayIcon"
+                        />
                     </div>
                 ))}
             </div>
